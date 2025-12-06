@@ -39,10 +39,10 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                 <div className={cn('flex items-end gap-3', isCurrentUser ? 'justify-end' : 'justify-start')}>
                   <div
                     className={cn(
-                      'max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-2xl flex flex-col',
+                      'max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-2xl flex flex-col border',
                       isCurrentUser
-                        ? 'bg-primary text-primary-foreground rounded-br-none'
-                        : 'bg-muted/50 rounded-bl-none'
+                        ? 'bg-background border-primary rounded-br-none'
+                        : 'bg-background border-primary rounded-bl-none'
                     )}
                   >
                     {message.file && (
