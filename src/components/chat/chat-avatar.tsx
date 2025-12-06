@@ -18,21 +18,15 @@ const generateColor = (str: string) => {
 };
 
 export function ChatAvatar({ user }: { user: User }) {
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
-
   const color = generateColor(user.name);
 
   return (
-    <Avatar className="w-8 h-8">
+    <Avatar className="w-auto h-8 px-3">
       <AvatarFallback 
-        style={{ backgroundColor: color }}
-        className="text-white font-bold"
+        style={{ backgroundColor: 'transparent' }}
+        className="text-foreground font-bold"
       >
-        {initials}
+        {user.name}
       </AvatarFallback>
     </Avatar>
   );

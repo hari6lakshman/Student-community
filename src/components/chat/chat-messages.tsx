@@ -27,7 +27,9 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
               )}
             >
               {!isCurrentUser && (
-                <ChatAvatar user={message.user} />
+                <div className="flex flex-col items-start">
+                    <ChatAvatar user={message.user} />
+                </div>
               )}
               <div
                 className={cn(
@@ -37,10 +39,6 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                     : 'bg-muted/50 rounded-bl-none'
                 )}
               >
-                {!isCurrentUser && (
-                    <p className="text-xs text-foreground/60 mb-1">{message.user.name}</p>
-                )}
-                
                 {message.file && (
                   <div className="mb-2">
                     {message.file.type.startsWith('image/') ? (
@@ -72,7 +70,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                  </Button>
                )}
               {isCurrentUser && (
-                <ChatAvatar user={message.user} />
+                 <ChatAvatar user={message.user} />
               )}
             </div>
           );
