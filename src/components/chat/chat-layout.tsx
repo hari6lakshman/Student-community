@@ -1,7 +1,7 @@
 'use client';
 
 import type { Message, User } from '@/lib/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatHeader } from './chat-header';
 import { ChatMessages } from './chat-messages';
@@ -13,11 +13,24 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    const storedMessages = localStorage.getItem('chatMessages');
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages));
+    } else {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
+
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
 
   const sendMessage = (text: string) => {
     const newMessage: Message = {
-      id: (messages.length + 1).toString(),
+      id: Date.now().toString(),
       user,
       text,
       timestamp: Date.now(),
@@ -27,7 +40,7 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
   
   const sendFile = (file: File) => {
     const newMessage: Message = {
-      id: (messages.length + 1).toString(),
+      id: Date.now().toString(),
       user,
       text: ``,
       timestamp: Date.now(),
@@ -40,10 +53,14 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
     setMessages([...messages, newMessage]);
   };
 
+  const deleteMessage = (id: string) => {
+    setMessages(messages.filter(msg => msg.id !== id));
+  }
+
   return (
     <Card className="w-full max-w-4xl h-[85vh] flex flex-col border-2 border-primary shadow-2xl shadow-primary/20 rounded-2xl">
       <ChatHeader />
-      <ChatMessages messages={messages} currentUser={user} />
+      <ChatMessages messages={messages} currentUser={user} onDeleteMessage={deleteMessage} />
       <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} />
     </Card>
   );
