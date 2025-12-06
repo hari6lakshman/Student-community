@@ -16,10 +16,8 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
 
   useEffect(() => {
-    const storedMessages = localStorage.getItem('chatMessages');
-    if (storedMessages) {
-      setMessages(JSON.parse(storedMessages));
-    }
+    // On initial load, clear any stored messages to ensure a fresh start.
+    localStorage.removeItem('chatMessages');
   }, []);
 
   useEffect(() => {
