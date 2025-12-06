@@ -58,7 +58,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                         ) : (
                           <a href={message.file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-background/20 hover:bg-background/40 transition-colors">
                             {message.file.type.startsWith('video/') ? <Video className="w-6 h-6"/> : message.file.type === 'application/pdf' ? <File className="w-6 h-6 text-red-500" /> : <File className="w-6 h-6"/>}
-                            <span className="text-sm font-medium truncate">{message.file.name}</span>
+                            <span className="text-sm font-medium break-words">{message.file.name}</span>
                           </a>
                         )}
                       </div>
