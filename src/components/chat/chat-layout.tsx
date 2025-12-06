@@ -13,15 +13,24 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
-  const [messages, setMessages] = useState<Message[]>(() => {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedMessages = localStorage.getItem('chatMessages');
-      if (savedMessages) {
-        return JSON.parse(savedMessages);
-      }
+      const savedMessagesJSON = localStorage.getItem('chatMessages');
+      const savedMessages: Message[] = savedMessagesJSON ? JSON.parse(savedMessagesJSON) : [];
+
+      // Update names for existing messages if the email matches
+      const updatedMessages = savedMessages.map(msg => {
+        if (msg.user.email === user.email && msg.user.name !== user.name) {
+          return { ...msg, user: { ...msg.user, name: user.name } };
+        }
+        return msg;
+      });
+
+      setMessages(updatedMessages);
     }
-    return initialMessages;
-  });
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
