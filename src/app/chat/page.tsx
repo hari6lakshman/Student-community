@@ -7,8 +7,9 @@ import type { User } from '@/lib/types';
 export default function ChatPage() {
   const cookieStore = cookies();
   const studentName = cookieStore.get('student_name')?.value;
+  const studentEmail = cookieStore.get('student_email')?.value;
 
-  if (!studentName) {
+  if (!studentName || !studentEmail) {
     redirect('/');
   }
 
@@ -16,6 +17,7 @@ export default function ChatPage() {
   // In a real app, this would come from a database.
   const currentUser: User = {
     name: studentName,
+    email: studentEmail,
   };
 
   return (

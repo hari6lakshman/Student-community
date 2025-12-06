@@ -17,7 +17,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
     <ScrollArea className="flex-1">
       <div className="p-4 md:p-6 space-y-6">
         {messages.map((message, index) => {
-          const isCurrentUser = message.user.name === currentUser.name;
+          const isCurrentUser = message.user.email === currentUser.email;
           return (
             <div
               key={index}

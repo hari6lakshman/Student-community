@@ -30,9 +30,15 @@ export async function loginUser(prevState: State, formData: FormData): Promise<S
     };
   }
 
-  const { name } = validatedFields.data;
+  const { name, email } = validatedFields.data;
   
   cookies().set('student_name', name, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 1 day
+      path: '/',
+  });
+  cookies().set('student_email', email, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24, // 1 day
