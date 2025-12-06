@@ -13,20 +13,20 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
 
   useEffect(() => {
     const storedMessages = localStorage.getItem('chatMessages');
     if (storedMessages) {
       setMessages(JSON.parse(storedMessages));
-    } else {
-      setMessages(initialMessages);
     }
   }, []);
 
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem('chatMessages', JSON.stringify(messages));
+    } else {
+      localStorage.removeItem('chatMessages');
     }
   }, [messages]);
 
@@ -58,9 +58,6 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
   const deleteMessage = (id: string) => {
     const newMessages = messages.filter(msg => msg.id !== id);
     setMessages(newMessages);
-    if(newMessages.length === 0){
-        localStorage.removeItem('chatMessages');
-    }
   }
 
   return (
