@@ -13,7 +13,20 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedMessagesJSON = localStorage.getItem('chatMessages');
+      if (savedMessagesJSON) {
+        try {
+          return JSON.parse(savedMessagesJSON);
+        } catch (e) {
+          console.error("Failed to parse messages from localStorage", e);
+          return [];
+        }
+      }
+    }
+    return initialMessages;
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -30,7 +43,7 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
 
       setMessages(updatedMessages);
     }
-  }, [user]);
+  }, [user.email, user.name]);
 
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
@@ -43,7 +56,7 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
       text,
       timestamp: Date.now(),
     };
-    setMessages([...messages, newMessage]);
+    setMessages(prevMessages => [...prevMessages, newMessage]);
   };
   
   const sendFile = (file: File) => {
@@ -58,12 +71,11 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
         type: file.type,
       }
     };
-    setMessages([...messages, newMessage]);
+    setMessages(prevMessages => [...prevMessages, newMessage]);
   };
 
   const deleteMessage = (id: string) => {
-    const newMessages = messages.filter(msg => msg.id !== id);
-    setMessages(newMessages);
+    setMessages(prevMessages => prevMessages.filter(msg => msg.id !== id));
   }
 
   return (
