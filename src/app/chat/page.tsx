@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ChatLayout } from '@/components/chat/chat-layout';
-import { messages as initialMessages, users } from '@/lib/data';
+import { messages as initialMessages } from '@/lib/data';
 import type { User } from '@/lib/types';
 
 export default function ChatPage() {
@@ -16,7 +16,6 @@ export default function ChatPage() {
   // In a real app, this would come from a database.
   const currentUser: User = {
     name: studentName,
-    avatarUrl: `https://i.pravatar.cc/150?u=${studentName.replace(/\s+/g, '')}`,
   };
 
   return (

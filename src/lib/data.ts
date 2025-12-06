@@ -1,10 +1,10 @@
 import type { Message } from './types';
 
 export const users = {
-  alex: { name: 'Alex Doe', avatarUrl: 'https://i.pravatar.cc/150?u=alex' },
-  sam: { name: 'Sam Smith', avatarUrl: 'https://i.pravatar.cc/150?u=sam' },
-  casey: { name: 'Casey Jones', avatarUrl: 'https://i.pravatar.cc/150?u=casey' },
-  jordan: { name: 'Jordan Lee', avatarUrl: 'https://i.pravatar.cc/150?u=jordan' },
+  alex: { name: 'Alex Doe' },
+  sam: { name: 'Sam Smith' },
+  casey: { name: 'Casey Jones' },
+  jordan: { name: 'Jordan Lee' },
 };
 
 export const messages: Message[] = [

@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { User } from "@/lib/types";
 
 // Function to generate a consistent color from a string
@@ -28,7 +28,6 @@ export function ChatAvatar({ user }: { user: User }) {
 
   return (
     <Avatar className="w-8 h-8">
-      {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
       <AvatarFallback 
         style={{ backgroundColor: color }}
         className="text-white font-bold"
