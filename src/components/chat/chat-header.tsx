@@ -10,7 +10,7 @@ export function ChatHeader() {
           <ArrowLeft />
         </Button>
       </Link>
-      <h1 className="text-2xl font-headline text-center text-primary">
+      <h1 className="text-2xl font-headline text-center font-bold" style={{color: 'gold'}}>
         Studygram Students Community
       </h1>
       <div className="w-8"></div> {/* Spacer */}

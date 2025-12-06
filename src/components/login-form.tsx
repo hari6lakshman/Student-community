@@ -26,7 +26,7 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-sm border-2 border-primary shadow-2xl shadow-primary/20 rounded-2xl">
       <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-headline text-primary">Studygram</CardTitle>
+        <CardTitle className="text-3xl font-headline font-bold" style={{color: 'gold'}}>Studygram</CardTitle>
         <CardDescription className="font-body text-foreground/80">Join the student community</CardDescription>
       </CardHeader>
       <CardContent>
