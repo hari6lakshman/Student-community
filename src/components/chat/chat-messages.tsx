@@ -26,7 +26,11 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                 isCurrentUser ? 'items-end' : 'items-start'
               )}
             >
-              <div className={cn('flex items-center gap-3', isCurrentUser ? 'flex-row-reverse' : 'flex-row')}>
+              <div className={cn(
+                  'flex items-center gap-3', 
+                  isCurrentUser ? 'flex-row-reverse' : 'flex-row',
+                  !isCurrentUser && 'ml-12' 
+                )}>
                 <ChatAvatar user={message.user} />
               </div>
 
