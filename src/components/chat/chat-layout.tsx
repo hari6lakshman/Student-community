@@ -22,10 +22,12 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
     } else {
       setMessages(initialMessages);
     }
-  }, [initialMessages]);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('chatMessages', JSON.stringify(messages));
+    if (messages.length > 0) {
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
   }, [messages]);
 
   const sendMessage = (text: string) => {
@@ -54,7 +56,11 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
   };
 
   const deleteMessage = (id: string) => {
-    setMessages(messages.filter(msg => msg.id !== id));
+    const newMessages = messages.filter(msg => msg.id !== id);
+    setMessages(newMessages);
+    if(newMessages.length === 0){
+        localStorage.removeItem('chatMessages');
+    }
   }
 
   return (
