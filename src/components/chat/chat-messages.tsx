@@ -72,7 +72,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                     </Button>
                   )}
                 </div>
-                 <p className={cn("text-xs", isCurrentUser ? "text-primary-foreground/60" : "text-foreground/60", isCurrentUser ? 'pr-12' : 'pl-16')}>
+                 <p className={cn("text-xs text-primary/80", isCurrentUser ? 'pr-12' : 'pl-16')}>
                   {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>

@@ -24,7 +24,7 @@ export function ChatAvatar({ user }: { user: User }) {
     <Avatar className="w-auto h-8 px-3">
       <AvatarFallback 
         style={{ backgroundColor: 'transparent' }}
-        className="text-foreground font-bold"
+        className="text-primary font-bold"
       >
         {user.name}
       </AvatarFallback>
