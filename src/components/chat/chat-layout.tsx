@@ -33,11 +33,7 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
   }, [user]);
 
   useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('chatMessages', JSON.stringify(messages));
-    } else {
-      localStorage.removeItem('chatMessages');
-    }
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
 
   const sendMessage = (text: string) => {
