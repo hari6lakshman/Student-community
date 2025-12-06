@@ -35,6 +35,8 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem('chatMessages', JSON.stringify(messages));
+    } else {
+      localStorage.removeItem('chatMessages');
     }
   }, [messages]);
 
@@ -71,6 +73,7 @@ export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
   return (
     <Card className="w-full max-w-4xl h-[85vh] flex flex-col border-2 border-primary shadow-2xl shadow-primary/20 rounded-2xl">
       <ChatHeader />
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
       <ChatMessages messages={messages} currentUser={user} onDeleteMessage={deleteMessage} />
       <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} />
     </Card>

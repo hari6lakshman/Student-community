@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export function ChatHeader() {
   return (
-    <div className="p-4 flex-shrink-0 flex items-center justify-between border-b-2 border-primary">
+    <div className="p-4 flex-shrink-0 flex items-center justify-between">
       <Link href="/" passHref>
         <Button variant="ghost" size="icon">
           <ArrowLeft />
