@@ -42,7 +42,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                       isCurrentUser
                         ? 'bg-primary text-primary-foreground rounded-br-none'
                         : 'bg-muted/50 rounded-bl-none',
-                      isCurrentUser ? 'ml-10' : 'mr-10'
+                      isCurrentUser ? 'ml-12' : 'mr-12'
                     )}
                   >
                     {message.file && (
@@ -72,7 +72,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                     </Button>
                   )}
                 </div>
-                 <p className={cn("text-xs", isCurrentUser ? "text-primary-foreground/60" : "text-foreground/60", isCurrentUser ? 'pr-14' : 'pl-14')}>
+                 <p className={cn("text-xs", isCurrentUser ? "text-primary-foreground/60" : "text-foreground/60", isCurrentUser ? 'pr-12' : 'pl-12')}>
                   {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
