@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ChatLayout } from '@/components/chat/chat-layout';
-import { messages as initialMessages } from '@/lib/data';
 import type { User } from '@/lib/types';
 
 export default function ChatPage() {
@@ -22,7 +21,7 @@ export default function ChatPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 lg:p-8">
-      <ChatLayout user={currentUser} initialMessages={initialMessages} />
+      <ChatLayout user={currentUser} initialMessages={[]} />
     </main>
   );
 }

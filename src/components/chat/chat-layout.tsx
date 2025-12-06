@@ -13,19 +13,18 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-
-  useEffect(() => {
-    // On initial load, clear any stored messages to ensure a fresh start.
-    localStorage.removeItem('chatMessages');
-  }, []);
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('chatMessages', JSON.stringify(messages));
-    } else {
-      localStorage.removeItem('chatMessages');
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedMessages = localStorage.getItem('chatMessages');
+      if (savedMessages) {
+        return JSON.parse(savedMessages);
+      }
     }
+    return initialMessages;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
 
   const sendMessage = (text: string) => {
