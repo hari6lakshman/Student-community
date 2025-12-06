@@ -64,7 +64,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                       </div>
                     )}
 
-                    {message.text && <p className="text-sm font-body whitespace-pre-wrap">{message.text}</p>}
+                    {message.text && <p className="text-sm font-body whitespace-pre-wrap text-primary">{message.text}</p>}
                   </div>
                   {isCurrentUser && (
                     <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDeleteMessage(message.id)}>
