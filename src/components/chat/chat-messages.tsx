@@ -26,15 +26,17 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                 isCurrentUser ? 'items-end' : 'items-start'
               )}
             >
-              <div className={cn(
-                  'flex items-center gap-3', 
+              <div
+                className={cn(
+                  'flex items-center gap-3',
                   isCurrentUser ? 'flex-row-reverse' : 'flex-row',
-                  !isCurrentUser && 'ml-12' 
-                )}>
+                  !isCurrentUser && 'ml-12'
+                )}
+              >
                 <ChatAvatar user={message.user} />
               </div>
 
-              <div className={cn('flex flex-col gap-1.5', isCurrentUser ? 'items-end' : 'items-start')}>
+              <div className={cn('flex flex-col gap-1.5', isCurrentUser ? 'items-end pr-[10px]' : 'items-start')}>
                 <div className={cn('flex items-end gap-3', isCurrentUser ? 'justify-end' : 'justify-start')}>
                   <div
                     className={cn(
@@ -42,7 +44,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage }: ChatMes
                       isCurrentUser
                         ? 'bg-primary text-primary-foreground rounded-br-none'
                         : 'bg-muted/50 rounded-bl-none',
-                      isCurrentUser ? 'ml-12' : 'mr-12'
+                      !isCurrentUser && 'ml-12'
                     )}
                   >
                     {message.file && (
