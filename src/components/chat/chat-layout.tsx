@@ -9,6 +9,8 @@ import { ChatInput } from './chat-input';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChatLayoutProps {
   currentUser: User;
@@ -16,8 +18,8 @@ interface ChatLayoutProps {
 
 export function ChatLayout({ currentUser }: ChatLayoutProps) {
   const firestore = useFirestore();
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Memoize the query to prevent re-renders
   const messagesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'chat_messages'), orderBy('timestamp', 'asc'));
@@ -53,11 +55,33 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
     });
   };
   
-  const sendFile = (file: File) => {
-    // File upload to Firebase Storage would be implemented here
-    console.log("File sending not implemented yet", file);
-    // For now, let's just send a message indicating a file was "sent"
-    sendMessage(`[File] ${file.name}`);
+  const sendFile = async (file: File) => {
+    if (!firestore) return;
+    setIsUploading(true);
+
+    try {
+      const storage = getStorage();
+      const fileId = uuidv4();
+      const storageRef = ref(storage, `uploads/${fileId}-${file.name}`);
+      
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const messagesCollection = collection(firestore, 'chat_messages');
+      addDocumentNonBlocking(messagesCollection, {
+        message: '',
+        studentId: currentUser.id,
+        timestamp: serverTimestamp(),
+        fileUrl: downloadURL,
+        fileName: file.name,
+        fileType: file.type,
+      });
+
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const deleteMessage = (id: string) => {
@@ -76,7 +100,7 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
         onDeleteMessage={deleteMessage}
         isLoading={messagesLoading}
       />
-      <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} />
+      <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} isUploading={isUploading} />
     </Card>
   );
 }

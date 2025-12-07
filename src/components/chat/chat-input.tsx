@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 interface ChatInputProps {
   onSendMessage: (text: string) => void;
   onSendFile: (file: File) => void;
+  isUploading: boolean;
 }
 
-export function ChatInput({ onSendMessage, onSendFile }: ChatInputProps) {
+export function ChatInput({ onSendMessage, onSendFile, isUploading }: ChatInputProps) {
   const [text, setText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,9 +68,10 @@ export function ChatInput({ onSendMessage, onSendFile }: ChatInputProps) {
             onChange={handleFileSelect}
             className="hidden" 
             accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            disabled={isUploading}
           />
-          <Button size="icon" variant="ghost" className="rounded-full" onClick={() => fileInputRef.current?.click()}>
-            <Paperclip className="w-5 h-5 text-foreground/80" />
+          <Button size="icon" variant="ghost" className="rounded-full" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+            {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5 text-foreground/80" />}
           </Button>
           <Button size="icon" variant="ghost" className="rounded-full" onClick={handleSend} disabled={!text.trim() || isSending}>
             {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizonal className="w-5 h-5 text-primary" />}
