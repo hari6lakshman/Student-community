@@ -1,35 +1,23 @@
 'use client';
 
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
-import { loginUser, type State } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { useAuth, useUser } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, getFirestore } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Join Chat
-    </Button>
-  );
-}
+import { LoginSchema, type State } from '@/lib/actions';
 
 export function LoginForm() {
   const router = useRouter();
-  const initialState: State = { message: null, errors: {} };
-  const [state, dispatch] = useActionState(loginUser, initialState);
+  const [state, setState] = useState<State>({ message: null, errors: null });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const auth = useAuth();
@@ -37,20 +25,20 @@ export function LoginForm() {
 
   // Effect to sign out any existing user when the login form mounts
   useEffect(() => {
-    if (auth && !user) { // Only sign out if there isn't already a user being established
+    if (auth && user) {
         signOut(auth);
     }
-  }, [auth, user]);
+  }, [auth]);
 
   useEffect(() => {
-    // If we have a user and the form was successfully submitted
-    if (user && state?.message === 'success' ) {
+    // This effect runs when the user object becomes available after a successful sign-in
+    if (user && isSubmitting) {
         const form = document.querySelector('form') as HTMLFormElement;
         if (form) {
             const formData = new FormData(form);
             const name = formData.get('name') as string;
             const email = formData.get('email') as string;
-    
+            
             const studentRef = doc(getFirestore(), 'students', user.uid);
             setDocumentNonBlocking(studentRef, {
                 id: user.uid,
@@ -61,13 +49,35 @@ export function LoginForm() {
             setIsRedirecting(true);
             router.push('/chat');
         }
-    } else if (state?.message === 'success' && auth && !user) {
-        // If form is valid but we don't have a user yet, sign in anonymously.
-        // The effect above will handle the redirect once the user object is available.
+    }
+  }, [user, isSubmitting, router]);
+  
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setState({ message: null, errors: null });
+
+    const formData = new FormData(event.currentTarget);
+    const validatedFields = LoginSchema.safeParse({
+      email: formData.get('email'),
+      name: formData.get('name'),
+    });
+
+    if (!validatedFields.success) {
+      setState({
+        errors: validatedFields.error.flatten().fieldErrors,
+        message: 'Invalid fields. Failed to login.',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // If validation is successful, initiate anonymous sign-in
+    if (auth) {
         initiateAnonymousSignIn(auth);
     }
-  }, [state, auth, user, router]);
-  
+  };
+
 
   return (
     <Card className="w-full max-w-sm border-2 border-primary shadow-2xl shadow-primary/20 rounded-2xl">
@@ -78,7 +88,7 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={dispatch} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" placeholder="m@example.com" required />
@@ -95,7 +105,10 @@ export function LoginForm() {
                 <p className="text-sm text-destructive" key={error}>{error}</p>
               ))}
           </div>
-          <SubmitButton />
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
+            {isSubmitting || isRedirecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Join Chat
+          </Button>
           {state?.message && state.message !== 'success' && <p className="text-sm text-destructive">{state.message}</p>}
         </form>
       </CardContent>
