@@ -11,6 +11,7 @@ import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/no
 import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatLayoutProps {
   currentUser: User;
@@ -19,6 +20,7 @@ interface ChatLayoutProps {
 export function ChatLayout({ currentUser }: ChatLayoutProps) {
   const firestore = useFirestore();
   const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const messagesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -79,6 +81,11 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
 
     } catch (error) {
       console.error("Error uploading file:", error);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: "There was a problem uploading your file. Please try again.",
+      });
     } finally {
       setIsUploading(false);
     }
