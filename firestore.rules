@@ -23,8 +23,6 @@
  * - Public Reads for Community Content: To facilitate a community environment,
  *   chat messages and file metadata are publicly readable by anyone. Writes
  *   (create, update, delete) are strictly controlled by the owner.
- * - No User Enumeration: Listing the entire `/students` collection is explicitly
- *   disallowed to protect user privacy and prevent data scraping.
  * - Profile Visibility: A student's profile can be read by any signed-in user,
  *   but can only be modified by the student themselves.
  */
@@ -88,15 +86,14 @@ service cloud.firestore {
      * @description Manages student profile documents.
      * @path /students/{studentId}
      * @allow (create) An authenticated user creating their own profile document, where {studentId} matches their UID.
-     * @allow (get) An authenticated user viewing any student's profile.
+     * @allow (get, list) An authenticated user viewing any student's profile.
      * @allow (update) An authenticated user updating their own profile document.
-     * @deny (list) Any user listing all student profiles to prevent user enumeration.
      * @deny (create) A user trying to create a profile for another user's UID.
      * @principle Restricts access to a user's own data tree and enforces self-creation.
      */
     match /students/{studentId} {
       allow get: if isSignedIn();
-      allow list: if false;
+      allow list: if isSignedIn();
       allow create: if isOwner(studentId) && isStudentDataConsistent(studentId);
       allow update: if isOwner(studentId) && resource != null && isStudentDataConsistent(studentId);
       allow delete: if isExistingOwner(studentId);
