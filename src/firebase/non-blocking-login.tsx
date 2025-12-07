@@ -9,7 +9,9 @@ import {
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  signInAnonymously(authInstance);
+  signInAnonymously(authInstance).catch((error) => {
+    console.error("Anonymous sign-in error:", error);
+  });
 }
 
 /** Initiate email/password sign-up (non-blocking). */

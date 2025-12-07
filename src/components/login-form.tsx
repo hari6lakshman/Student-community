@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { useAuth, useUser } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, getFirestore } from 'firebase/firestore';
@@ -37,42 +37,36 @@ export function LoginForm() {
 
   // Effect to sign out any existing user when the login form mounts
   useEffect(() => {
-    if (auth) {
-      signOut(auth);
+    if (auth && !user) { // Only sign out if there isn't already a user being established
+        signOut(auth);
     }
-  }, [auth]);
+  }, [auth, user]);
 
   useEffect(() => {
-    if (state?.message === 'success' && auth) {
-      const form = document.querySelector('form') as HTMLFormElement;
-      const formData = new FormData(form);
-      const email = formData.get('email') as string;
-      // Using a fixed password because we're essentially using email as a unique ID
-      const password = 'password'; 
-      initiateEmailSignIn(auth, email, password);
+    // If we have a user and the form was successfully submitted
+    if (user && state?.message === 'success' ) {
+        const form = document.querySelector('form') as HTMLFormElement;
+        if (form) {
+            const formData = new FormData(form);
+            const name = formData.get('name') as string;
+            const email = formData.get('email') as string;
+    
+            const studentRef = doc(getFirestore(), 'students', user.uid);
+            setDocumentNonBlocking(studentRef, {
+                id: user.uid,
+                email: email,
+                studentName: name,
+            }, { merge: true });
+            
+            setIsRedirecting(true);
+            router.push('/chat');
+        }
+    } else if (state?.message === 'success' && auth && !user) {
+        // If form is valid but we don't have a user yet, sign in anonymously.
+        // The effect above will handle the redirect once the user object is available.
+        initiateAnonymousSignIn(auth);
     }
-  }, [state, auth]);
-
-  useEffect(() => {
-    if (user) {
-      const form = document.querySelector('form') as HTMLFormElement;
-      if (form) {
-        const formData = new FormData(form);
-        const name = formData.get('name') as string;
-        const email = formData.get('email') as string;
-  
-        const studentRef = doc(getFirestore(), 'students', user.uid);
-        setDocumentNonBlocking(studentRef, {
-          id: user.uid,
-          email: email,
-          studentName: name,
-        }, { merge: true });
-        
-        setIsRedirecting(true);
-        router.push('/chat');
-      }
-    }
-  }, [user, router]);
+  }, [state, auth, user, router]);
   
 
   return (
