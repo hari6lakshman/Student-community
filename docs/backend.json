@@ -1,0 +1,169 @@
+{
+  "entities": {
+    "Student": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Student",
+      "type": "object",
+      "description": "Represents a student in the Studygram community.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the student entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Student's email address.",
+          "format": "email"
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Student's name."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "studentName"
+      ]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "Represents a chat message in the Studygram community.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the chat message entity."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to Student. (Relationship: Student 1:N ChatMessage)",
+          "format": "uuid"
+        },
+        "message": {
+          "type": "string",
+          "description": "The content of the chat message."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The date and time the message was sent.",
+          "format": "date-time"
+        },
+        "fileUploadId": {
+          "type": "string",
+          "description": "Reference to FileUpload. (Relationship: FileUpload 1:1 ChatMessage). Can be null if no file is attached",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "id",
+        "studentId",
+        "message",
+        "timestamp"
+      ]
+    },
+    "FileUpload": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FileUpload",
+      "type": "object",
+      "description": "Represents a file uploaded by a student.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the file upload entity."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to Student. (Relationship: Student 1:N FileUpload)",
+          "format": "uuid"
+        },
+        "fileName": {
+          "type": "string",
+          "description": "The name of the uploaded file."
+        },
+        "fileType": {
+          "type": "string",
+          "description": "The type of the uploaded file (e.g., image, video, document)."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "The URL where the file is stored.",
+          "format": "uri"
+        },
+        "uploadTimestamp": {
+          "type": "string",
+          "description": "The date and time the file was uploaded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "studentId",
+        "fileName",
+        "fileType",
+        "fileUrl",
+        "uploadTimestamp"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/students/{studentId}",
+        "definition": {
+          "entityName": "Student",
+          "schema": {
+            "$ref": "#/backend/entities/Student"
+          },
+          "description": "Stores student profiles, uniquely identified by their studentId. The studentId also corresponds to the Firebase Auth UID. This collection stores basic profile information.",
+          "params": [
+            {
+              "name": "studentId",
+              "description": "The unique identifier for the student, matching the Firebase Auth UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/chat_messages/{chatMessageId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": {
+            "$ref": "#/backend/entities/ChatMessage"
+          },
+          "description": "Stores chat messages. Includes denormalized 'studentId' for authorization independence and efficient querying. This allows for direct querying of all messages by a specific user without additional lookups. Chat history older than 15 days is automatically purged.",
+          "params": [
+            {
+              "name": "chatMessageId",
+              "description": "The unique identifier for the chat message."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/file_uploads/{fileUploadId}",
+        "definition": {
+          "entityName": "FileUpload",
+          "schema": {
+            "$ref": "#/backend/entities/FileUpload"
+          },
+          "description": "Stores file upload metadata. Includes denormalized 'studentId' for authorization independence and efficient querying. This allows for direct querying of all file uploads by a specific user without additional lookups.",
+          "params": [
+            {
+              "name": "fileUploadId",
+              "description": "The unique identifier for the file upload."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support the Studygram community's chat and file-sharing features while ensuring security and scalability. It leverages path-based ownership for student data and denormalization to avoid complex security rules. The structure is also designed to be easily debuggable and maintainable.\n\nStudents are stored under `/students/{studentId}`.  Chat messages are stored under `/chat_messages/{chatMessageId}` with a denormalized `studentId` to facilitate querying messages by student and enforcing security rules without needing to perform `get()` operations. File uploads are stored under `/file_uploads/{fileUploadId}` and include the `studentId`. This denormalization enables efficient list operations (QAPs) without requiring complex filtering in security rules. The structure also segregates data based on access needs, ensuring that all documents within a collection share the same security posture.\n\nAuthorization Independence is achieved by denormalizing the `studentId` in both `/chat_messages` and `/file_uploads`. This allows security rules to validate ownership (`request.auth.uid == resource.data.studentId`) without needing to fetch the parent `Student` document.\n\nQAPs are supported by segregating chat messages and files into dedicated collections with denormalized `studentId`, enabling secure and efficient listing of resources associated with a specific student."
+  }
+}

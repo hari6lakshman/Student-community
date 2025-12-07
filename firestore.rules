@@ -1,0 +1,141 @@
+/**
+ * This ruleset enforces a user-ownership model for a community application.
+ * It is designed for rapid prototyping, prioritizing strict authorization
+ * while maintaining flexibility in data schemas.
+ *
+ * Core Philosophy:
+ * The security model is centered around the "student" (user). Students can manage
+ * their own profiles and content (chat messages, file uploads). Content in shared
+ * collections is designed to be publicly readable to support community features,
+ * but all write operations are strictly limited to the content's owner.
+ *
+ * Data Structure:
+ * - /students/{studentId}: Contains private user profile data. The {studentId}
+ *   must match the authenticated user's UID.
+ * - /chat_messages/{chatMessageId}: A top-level collection for all chat messages.
+ * - /file_uploads/{fileUploadId}: A top-level collection for all file metadata.
+ *
+ * Key Security Decisions:
+ * - Denormalization for Authorization: Chat messages and file uploads contain a
+ *   denormalized `studentId` field. This allows for simple, performant ownership
+ *   checks directly within the rule, avoiding costly and slow `get()` calls to
+ *   other documents.
+ * - Public Reads for Community Content: To facilitate a community environment,
+ *   chat messages and file metadata are publicly readable by anyone. Writes
+ *   (create, update, delete) are strictly controlled by the owner.
+ * - No User Enumeration: Listing the entire `/students` collection is explicitly
+ *   disallowed to protect user privacy and prevent data scraping.
+ * - Profile Visibility: A student's profile can be read by any signed-in user,
+ *   but can only be modified by the student themselves.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     * Use this for path-based security checks.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the user is the owner of an existing document.
+     * CRITICAL: Always use for update/delete to prevent acting on null data.
+     */
+    function isExistingOwner(ownerId) {
+      return isOwner(ownerId) && resource != null;
+    }
+    
+    /**
+     * Validates that the user is creating a resource and correctly assigning
+     * their own UID to the specified ownership field in the document data.
+     */
+    function isCreatingOwnResource(ownerIdField) {
+      return isSignedIn() && request.auth.uid == request.resource.data[ownerIdField];
+    }
+    
+    /**
+     * Enforces consistency between the document's path ID and its internal ID field.
+     * - On create: ensures the client sets the `id` field correctly.
+     * - On update: ensures the `id` field is immutable.
+     */
+    function isStudentDataConsistent(studentId) {
+      let isCreating = resource == null;
+      let isUpdating = resource != null;
+
+      return (isCreating && request.resource.data.id == studentId) ||
+             (isUpdating && request.resource.data.id == resource.data.id);
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Manages student profile documents.
+     * @path /students/{studentId}
+     * @allow (create) An authenticated user creating their own profile document, where {studentId} matches their UID.
+     * @allow (get) An authenticated user viewing any student's profile.
+     * @allow (update) An authenticated user updating their own profile document.
+     * @deny (list) Any user listing all student profiles to prevent user enumeration.
+     * @deny (create) A user trying to create a profile for another user's UID.
+     * @principle Restricts access to a user's own data tree and enforces self-creation.
+     */
+    match /students/{studentId} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isOwner(studentId) && isStudentDataConsistent(studentId);
+      allow update: if isOwner(studentId) && resource != null && isStudentDataConsistent(studentId);
+      allow delete: if isExistingOwner(studentId);
+    }
+
+    /**
+     * @description Manages all chat messages for the community.
+     * @path /chat_messages/{chatMessageId}
+     * @allow (get, list) Any client (authenticated or not) can read chat messages.
+     * @allow (create) An authenticated user creating a message and setting the `studentId` to their own UID.
+     * @allow (delete) A user deleting a message they previously sent.
+     * @deny (create) A user creating a message on behalf of another user.
+     * @deny (update) A user trying to edit another user's message.
+     * @principle Implements public-read access with owner-only writes using a denormalized ownership field (`studentId`).
+     */
+    match /chat_messages/{chatMessageId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isCreatingOwnResource('studentId');
+      allow update: if isExistingOwner(resource.data.studentId);
+      allow delete: if isExistingOwner(resource.data.studentId);
+    }
+
+    /**
+     * @description Manages metadata for all file uploads in the community.
+     * @path /file_uploads/{fileUploadId}
+     * @allow (get, list) Any client (authenticated or not) can read file metadata.
+     * @allow (create) An authenticated user creating a file record and setting the `studentId` to their own UID.
+     * @allow (delete) A user deleting a file record they created.
+     * @deny (create) A user creating a file record on behalf of another user.
+     * @deny (update) A user trying to modify another user's file metadata.
+     * @principle Implements public-read access with owner-only writes using a denormalized ownership field (`studentId`).
+     */
+    match /file_uploads/{fileUploadId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isCreatingOwnResource('studentId');
+      allow update: if isExistingOwner(resource.data.studentId);
+      allow delete: if isExistingOwner(resource.data.studentId);
+    }
+  }
+}
