@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { cookies } from 'next/headers';
 
 const LoginSchema = z.object({
-  email: z.string({ invalid_type_error: 'Please enter a valid email.' }).email({ message: 'Please enter a valid email address.' }),
+  email: z.string({ required_error: 'Email is required.' }).email({ message: 'Please enter a valid email address.' }).min(1, { message: 'Email is required.' }),
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
 });
 
