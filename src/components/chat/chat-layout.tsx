@@ -6,10 +6,10 @@ import { Card } from '@/components/ui/card';
 import { ChatHeader } from './chat-header';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useStorage, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +19,7 @@ interface ChatLayoutProps {
 
 export function ChatLayout({ currentUser }: ChatLayoutProps) {
   const firestore = useFirestore();
+  const storage = useStorage();
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
@@ -58,11 +59,10 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
   };
   
   const sendFile = async (file: File) => {
-    if (!firestore) return;
+    if (!firestore || !storage) return;
     setIsUploading(true);
 
     try {
-      const storage = getStorage();
       const fileId = uuidv4();
       const storageRef = ref(storage, `uploads/${fileId}-${file.name}`);
       
