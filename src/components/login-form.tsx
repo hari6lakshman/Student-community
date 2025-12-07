@@ -14,6 +14,7 @@ import { useAuth, useUser } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, getFirestore } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -33,6 +34,13 @@ export function LoginForm() {
 
   const auth = useAuth();
   const { user } = useUser();
+
+  // Effect to sign out any existing user when the login form mounts
+  useEffect(() => {
+    if (auth) {
+      signOut(auth);
+    }
+  }, [auth]);
 
   useEffect(() => {
     if (state?.message === 'success' && auth) {
