@@ -45,5 +45,6 @@ export async function loginUser(prevState: State, formData: FormData): Promise<S
       path: '/',
   });
 
-  redirect('/chat');
+  // Redirect is now handled client-side after auth
+  return { message: "success" };
 }

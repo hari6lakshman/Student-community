@@ -1,88 +1,81 @@
 'use client';
 
-import type { Message, User } from '@/lib/types';
-import { useState, useEffect } from 'react';
+import type { Message, Student, User } from '@/lib/types';
+import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatHeader } from './chat-header';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
 
 interface ChatLayoutProps {
-  user: User;
-  initialMessages: Message[];
+  currentUser: User;
 }
 
-export function ChatLayout({ user, initialMessages }: ChatLayoutProps) {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedMessagesJSON = localStorage.getItem('chatMessages');
-      if (savedMessagesJSON) {
-        try {
-          return JSON.parse(savedMessagesJSON);
-        } catch (e) {
-          console.error("Failed to parse messages from localStorage", e);
-          return [];
-        }
-      }
-    }
-    return initialMessages;
-  });
+export function ChatLayout({ currentUser }: ChatLayoutProps) {
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedMessagesJSON = localStorage.getItem('chatMessages');
-      const savedMessages: Message[] = savedMessagesJSON ? JSON.parse(savedMessagesJSON) : [];
+  // Memoize the query to prevent re-renders
+  const messagesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'chat_messages'), orderBy('timestamp', 'asc'));
+  }, [firestore]);
 
-      // Update names for existing messages if the email matches
-      const updatedMessages = savedMessages.map(msg => {
-        if (msg.user.email === user.email && msg.user.name !== user.name) {
-          return { ...msg, user: { ...msg.user, name: user.name } };
-        }
-        return msg;
-      });
+  const studentsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'students');
+  }, [firestore]);
 
-      setMessages(updatedMessages);
-    }
-  }, [user.email, user.name]);
+  const { data: messagesData, isLoading: messagesLoading } = useCollection<Message>(messagesQuery);
+  const { data: studentsData } = useCollection<Student>(studentsQuery);
 
-  useEffect(() => {
-    localStorage.setItem('chatMessages', JSON.stringify(messages));
-  }, [messages]);
+  const messagesWithStudentData = useMemo(() => {
+    if (!messagesData || !studentsData) return [];
+    
+    const studentsMap = new Map(studentsData.map(s => [s.id, s]));
+
+    return messagesData.map(msg => ({
+      ...msg,
+      student: studentsMap.get(msg.studentId),
+    }));
+  }, [messagesData, studentsData]);
+
 
   const sendMessage = (text: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      user,
-      text,
-      timestamp: Date.now(),
-    };
-    setMessages(prevMessages => [...prevMessages, newMessage]);
+    if (!firestore) return;
+    const messagesCollection = collection(firestore, 'chat_messages');
+    addDocumentNonBlocking(messagesCollection, {
+      message: text,
+      studentId: currentUser.id,
+      timestamp: serverTimestamp(),
+    });
   };
   
   const sendFile = (file: File) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      user,
-      text: ``,
-      timestamp: Date.now(),
-      file: {
-        name: file.name,
-        url: URL.createObjectURL(file), // Mock URL
-        type: file.type,
-      }
-    };
-    setMessages(prevMessages => [...prevMessages, newMessage]);
+    // File upload to Firebase Storage would be implemented here
+    console.log("File sending not implemented yet", file);
+    // For now, let's just send a message indicating a file was "sent"
+    sendMessage(`[File] ${file.name}`);
   };
 
   const deleteMessage = (id: string) => {
-    setMessages(prevMessages => prevMessages.filter(msg => msg.id !== id));
+    if (!firestore) return;
+    const messageDoc = doc(firestore, 'chat_messages', id);
+    deleteDocumentNonBlocking(messageDoc);
   }
 
   return (
     <Card className="w-full max-w-4xl h-[85vh] flex flex-col border-2 border-primary shadow-2xl shadow-primary/20 rounded-2xl">
       <ChatHeader />
       <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
-      <ChatMessages messages={messages} currentUser={user} onDeleteMessage={deleteMessage} />
+      <ChatMessages
+        messages={messagesWithStudentData}
+        currentUser={currentUser}
+        onDeleteMessage={deleteMessage}
+        isLoading={messagesLoading}
+      />
       <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} />
     </Card>
   );

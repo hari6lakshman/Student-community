@@ -1,27 +1,29 @@
-import { cookies } from 'next/headers';
+'use client';
+
 import { redirect } from 'next/navigation';
 import { ChatLayout } from '@/components/chat/chat-layout';
-import type { User } from '@/lib/types';
+import { useUser } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 
 export default function ChatPage() {
-  const cookieStore = cookies();
-  const studentName = cookieStore.get('student_name')?.value;
-  const studentEmail = cookieStore.get('student_email')?.value;
+  const { user, isUserLoading } = useUser();
 
-  if (!studentName || !studentEmail) {
+  if (isUserLoading) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-foreground/80">Loading...</p>
+      </main>
+    );
+  }
+
+  if (!user) {
     redirect('/');
   }
 
-  // Create a user object for the current student.
-  // In a real app, this would come from a database.
-  const currentUser: User = {
-    name: studentName,
-    email: studentEmail,
-  };
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 lg:p-8">
-      <ChatLayout user={currentUser} initialMessages={[]} />
+      <ChatLayout currentUser={{ id: user.uid, name: user.displayName || 'Anonymous', email: user.email || '' }} />
     </main>
   );
 }
