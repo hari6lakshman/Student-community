@@ -50,10 +50,18 @@
           "description": "The date and time the message was sent.",
           "format": "date-time"
         },
-        "fileUploadId": {
+        "fileUrl": {
           "type": "string",
-          "description": "Reference to FileUpload. (Relationship: FileUpload 1:1 ChatMessage). Can be null if no file is attached",
-          "format": "uuid"
+          "description": "The URL of the uploaded file, if any.",
+          "format": "uri"
+        },
+        "fileName": {
+          "type": "string",
+          "description": "The name of the uploaded file, if any."
+        },
+        "fileType": {
+          "type": "string",
+          "description": "The MIME type of the uploaded file, if any."
         }
       },
       "required": [
