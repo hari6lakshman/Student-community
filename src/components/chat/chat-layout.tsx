@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { ChatHeader } from './chat-header';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
-import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 
 // A simple function to simulate a server timestamp
@@ -25,8 +24,6 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
       return [];
     }
   });
-
-  const { toast } = useToast();
 
   useEffect(() => {
     try {
@@ -50,22 +47,19 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
   };
-  
-  const sendFile = (file: File) => {
-    toast({
-      variant: "destructive",
-      title: "File uploads disabled",
-      description: "File sharing is not available in local mode.",
-    });
-  };
 
   const deleteMessage = (id: string) => {
     setMessages(prevMessages => prevMessages.filter(msg => msg.id !== id));
   }
 
+  const clearChat = () => {
+    localStorage.removeItem('studygram-messages');
+    setMessages([]);
+  };
+
   return (
     <Card className="w-full max-w-4xl h-[85vh] flex flex-col border-2 border-primary shadow-2xl shadow-primary/20 rounded-2xl">
-      <ChatHeader />
+      <ChatHeader onClearChat={clearChat} />
       <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
       <ChatMessages
         messages={messages}
@@ -73,7 +67,7 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
         onDeleteMessage={deleteMessage}
         isLoading={false}
       />
-      <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} isUploading={false} />
+      <ChatInput onSendMessage={sendMessage} />
     </Card>
   );
 }

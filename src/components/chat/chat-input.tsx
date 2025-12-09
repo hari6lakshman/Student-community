@@ -1,22 +1,17 @@
 'use client';
 
-import { useState, useRef, type KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Paperclip, SendHorizonal, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { SendHorizonal, Loader2 } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (text: string) => void;
-  onSendFile: (file: File) => void;
-  isUploading: boolean;
 }
 
-export function ChatInput({ onSendMessage, onSendFile, isUploading }: ChatInputProps) {
+export function ChatInput({ onSendMessage }: ChatInputProps) {
   const [text, setText] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   const handleSend = async () => {
     if (text.trim() && !isSending) {
@@ -34,40 +29,19 @@ export function ChatInput({ onSendMessage, onSendFile, isUploading }: ChatInputP
     }
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      toast({
-        variant: "destructive",
-        title: "File uploads disabled",
-        description: "File sharing is not available in local mode.",
-      });
-    }
-  }
-
   return (
     <div className="p-4 flex-shrink-0">
        <div className="mb-4 h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
       <div className="relative">
         <Textarea
           placeholder="Type a message..."
-          className="pr-24 min-h-[48px] resize-none rounded-2xl bg-muted/80 border-0 focus-visible:ring-1 focus-visible:ring-ring"
+          className="pr-16 min-h-[48px] resize-none rounded-2xl bg-muted/80 border-0 focus-visible:ring-1 focus-visible:ring-ring"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyPress}
           rows={1}
         />
-        <div className="absolute top-1/2 right-3 -translate-y-1/2 flex items-center gap-1">
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileSelect}
-            className="hidden" 
-            disabled={true}
-          />
-          <Button size="icon" variant="ghost" className="rounded-full" onClick={() => fileInputRef.current?.click()} disabled={true}>
-            <Paperclip className="w-5 h-5 text-foreground/80" />
-          </Button>
+        <div className="absolute top-1/2 right-3 -translate-y-1/2 flex items-center">
           <Button size="icon" variant="ghost" className="rounded-full" onClick={handleSend} disabled={!text.trim() || isSending}>
             {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizonal className="w-5 h-5 text-primary" />}
           </Button>
