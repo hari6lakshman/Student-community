@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LoginSchema, type State } from '@/lib/actions';
-import { v4 as uuidv4 } from 'uuid';
+import type { Message, User } from '@/lib/types';
 
 export function LoginForm() {
   const router = useRouter();
@@ -16,7 +16,6 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Clear any user session data when the login form is shown
     sessionStorage.removeItem('studygram-user');
   }, []);
 
@@ -41,12 +40,35 @@ export function LoginForm() {
     }
 
     const { email, name } = validatedFields.data;
-    
-    const user = {
-        id: uuidv4(),
+
+    // Use email as the unique ID
+    const user: User = {
+        id: email,
         email,
         name
     };
+
+    // Update name in existing messages
+    try {
+        const savedMessages = localStorage.getItem('studygram-messages');
+        if (savedMessages) {
+            let messages: Message[] = JSON.parse(savedMessages);
+            let updated = false;
+            messages.forEach(msg => {
+                if (msg.studentId === email && msg.student?.studentName !== name) {
+                    if (msg.student) {
+                      msg.student.studentName = name;
+                    }
+                    updated = true;
+                }
+            });
+            if (updated) {
+                localStorage.setItem('studygram-messages', JSON.stringify(messages));
+            }
+        }
+    } catch (error) {
+        console.error("Failed to update messages in localStorage", error);
+    }
 
     sessionStorage.setItem('studygram-user', JSON.stringify(user));
 
