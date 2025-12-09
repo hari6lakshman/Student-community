@@ -7,19 +7,34 @@ import { ChatHeader } from './chat-header';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
-import { messages as initialMessages, users as allUsers } from '@/lib/data';
 import { v4 as uuidv4 } from 'uuid';
-
-interface ChatLayoutProps {
-  currentUser: User;
-}
 
 // A simple function to simulate a server timestamp
 const getTimestamp = () => new Date();
 
 export function ChatLayout({ currentUser }: ChatLayoutProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+    try {
+      const savedMessages = localStorage.getItem('studygram-messages');
+      return savedMessages ? JSON.parse(savedMessages) : [];
+    } catch (error) {
+      console.error('Failed to parse messages from localStorage', error);
+      return [];
+    }
+  });
+
   const { toast } = useToast();
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('studygram-messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error('Failed to save messages to localStorage', error);
+    }
+  }, [messages]);
 
   const sendMessage = (text: string) => {
     const newMessage: Message = {
@@ -40,7 +55,7 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
     toast({
       variant: "destructive",
       title: "File uploads disabled",
-      description: "File sharing is not available without a cloud backend.",
+      description: "File sharing is not available in local mode.",
     });
   };
 
@@ -61,4 +76,8 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
       <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} isUploading={false} />
     </Card>
   );
+}
+
+interface ChatLayoutProps {
+  currentUser: User;
 }
