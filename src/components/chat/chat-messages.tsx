@@ -23,7 +23,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage, isLoading
           </div>
         )}
         {!isLoading && messages.map((message) => {
-          if (!message.student) return null; // Don't render message if student data isn't loaded yet
+          if (!message.student) return null;
           const isCurrentUser = message.studentId === currentUser.id;
           return (
             <div
@@ -80,7 +80,7 @@ export function ChatMessages({ messages, currentUser, onDeleteMessage, isLoading
                   )}
                 </div>
                  {message.timestamp && <p className={cn("text-xs text-primary/80", isCurrentUser ? 'pr-12' : 'pl-16')}>
-                  {message.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>}
               </div>
             </div>

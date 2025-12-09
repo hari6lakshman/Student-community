@@ -5,53 +5,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState, FormEvent } from 'react';
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { useAuth, useUser } from '@/firebase';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc, getFirestore } from 'firebase/firestore';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
 import { LoginSchema, type State } from '@/lib/actions';
+import { v4 as uuidv4 } from 'uuid';
 
 export function LoginForm() {
   const router = useRouter();
   const [state, setState] = useState<State>({ message: null, errors: null });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
-  const auth = useAuth();
-  const { user } = useUser();
-
-  // Effect to sign out any existing user when the login form mounts
-  useEffect(() => {
-    if (auth && user) {
-        signOut(auth);
-    }
-  }, [auth]);
 
   useEffect(() => {
-    // This effect runs when the user object becomes available after a successful sign-in
-    if (user && isSubmitting) {
-        const form = document.querySelector('form') as HTMLFormElement;
-        if (form) {
-            const formData = new FormData(form);
-            const name = formData.get('name') as string;
-            const email = formData.get('email') as string;
-            
-            const studentRef = doc(getFirestore(), 'students', user.uid);
-            setDocumentNonBlocking(studentRef, {
-                id: user.uid,
-                email: email,
-                studentName: name,
-            }, { merge: true });
-            
-            setIsRedirecting(true);
-            router.push('/chat');
-        }
-    }
-  }, [user, isSubmitting, router]);
-  
+    // Clear any user session data when the login form is shown
+    sessionStorage.removeItem('studygram-user');
+  }, []);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -72,10 +40,17 @@ export function LoginForm() {
       return;
     }
 
-    // If validation is successful, initiate anonymous sign-in
-    if (auth) {
-        initiateAnonymousSignIn(auth);
-    }
+    const { email, name } = validatedFields.data;
+    
+    const user = {
+        id: uuidv4(),
+        email,
+        name
+    };
+
+    sessionStorage.setItem('studygram-user', JSON.stringify(user));
+
+    router.push('/chat');
   };
 
 
@@ -84,7 +59,7 @@ export function LoginForm() {
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-headline font-bold text-primary">Studygram</CardTitle>
         <CardDescription className="font-body text-foreground/80">
-          {isRedirecting ? 'Redirecting to chat...' : 'Join the student community'}
+          Join the student community
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -106,10 +81,10 @@ export function LoginForm() {
               ))}
           </div>
           <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
-            {isSubmitting || isRedirecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Join Chat
           </Button>
-          {state?.message && state.message !== 'success' && <p className="text-sm text-destructive">{state.message}</p>}
+          {state?.message && <p className="text-sm text-destructive">{state.message}</p>}
         </form>
       </CardContent>
     </Card>

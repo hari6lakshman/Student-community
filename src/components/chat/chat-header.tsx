@@ -3,16 +3,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, LogOut } from 'lucide-react';
-import { useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 export function ChatHeader() {
-  const auth = useAuth();
   const router = useRouter();
 
-  const handleSignOut = async () => {
-    await signOut(auth);
+  const handleSignOut = () => {
+    sessionStorage.removeItem('studygram-user');
     router.push('/');
   };
 

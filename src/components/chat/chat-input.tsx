@@ -21,7 +21,7 @@ export function ChatInput({ onSendMessage, onSendFile, isUploading }: ChatInputP
   const handleSend = async () => {
     if (text.trim() && !isSending) {
       setIsSending(true);
-      await onSendMessage(text);
+      onSendMessage(text);
       setText('');
       setIsSending(false);
     }
@@ -37,15 +37,11 @@ export function ChatInput({ onSendMessage, onSendFile, isUploading }: ChatInputP
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if(file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({
-          variant: "destructive",
-          title: "File too large",
-          description: "Please upload files smaller than 5MB.",
-        });
-        return;
-      }
-      onSendFile(file);
+      toast({
+        variant: "destructive",
+        title: "File uploads disabled",
+        description: "File sharing is not available in local mode.",
+      });
     }
   }
 
@@ -67,11 +63,10 @@ export function ChatInput({ onSendMessage, onSendFile, isUploading }: ChatInputP
             ref={fileInputRef} 
             onChange={handleFileSelect}
             className="hidden" 
-            accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            disabled={isUploading}
+            disabled={true}
           />
-          <Button size="icon" variant="ghost" className="rounded-full" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-            {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5 text-foreground/80" />}
+          <Button size="icon" variant="ghost" className="rounded-full" onClick={() => fileInputRef.current?.click()} disabled={true}>
+            <Paperclip className="w-5 h-5 text-foreground/80" />
           </Button>
           <Button size="icon" variant="ghost" className="rounded-full" onClick={handleSend} disabled={!text.trim() || isSending}>
             {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizonal className="w-5 h-5 text-primary" />}

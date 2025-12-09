@@ -1,5 +1,3 @@
-import { Timestamp } from "firebase/firestore";
-
 export interface User {
   id: string;
   name: string;
@@ -16,7 +14,7 @@ export interface Message {
   id: string;
   studentId: string;
   message: string;
-  timestamp: Timestamp;
+  timestamp: Date; // Changed from Firestore Timestamp
   fileUrl?: string;
   fileName?: string;
   fileType?: string;

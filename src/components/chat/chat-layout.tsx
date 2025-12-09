@@ -1,100 +1,51 @@
 'use client';
 
-import type { Message, Student, User } from '@/lib/types';
-import { useState, useMemo } from 'react';
+import type { Message, User } from '@/lib/types';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatHeader } from './chat-header';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
-import { useCollection, useFirestore, useStorage, useMemoFirebase } from '@/firebase';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
+import { messages as initialMessages, users as allUsers } from '@/lib/data';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChatLayoutProps {
   currentUser: User;
 }
 
+// A simple function to simulate a server timestamp
+const getTimestamp = () => new Date();
+
 export function ChatLayout({ currentUser }: ChatLayoutProps) {
-  const firestore = useFirestore();
-  const storage = useStorage();
-  const [isUploading, setIsUploading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const { toast } = useToast();
 
-  const messagesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'chat_messages'), orderBy('timestamp', 'asc'));
-  }, [firestore]);
-
-  const studentsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'students');
-  }, [firestore]);
-
-  const { data: messagesData, isLoading: messagesLoading } = useCollection<Message>(messagesQuery);
-  const { data: studentsData } = useCollection<Student>(studentsQuery);
-
-  const messagesWithStudentData = useMemo(() => {
-    if (!messagesData || !studentsData) return [];
-    
-    const studentsMap = new Map(studentsData.map(s => [s.id, s]));
-
-    return messagesData.map(msg => ({
-      ...msg,
-      student: studentsMap.get(msg.studentId),
-    }));
-  }, [messagesData, studentsData]);
-
-
   const sendMessage = (text: string) => {
-    if (!firestore) return;
-    const messagesCollection = collection(firestore, 'chat_messages');
-    addDocumentNonBlocking(messagesCollection, {
+    const newMessage: Message = {
+      id: uuidv4(),
       message: text,
       studentId: currentUser.id,
-      timestamp: serverTimestamp(),
-    });
+      timestamp: getTimestamp(),
+      student: {
+        id: currentUser.id,
+        studentName: currentUser.name,
+        email: currentUser.email,
+      }
+    };
+    setMessages(prevMessages => [...prevMessages, newMessage]);
   };
   
-  const sendFile = async (file: File) => {
-    if (!firestore || !storage) return;
-    setIsUploading(true);
-
-    try {
-      const fileId = uuidv4();
-      const storageRef = ref(storage, `uploads/${fileId}-${file.name}`);
-      
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      const messagesCollection = collection(firestore, 'chat_messages');
-      addDocumentNonBlocking(messagesCollection, {
-        message: '',
-        studentId: currentUser.id,
-        timestamp: serverTimestamp(),
-        fileUrl: downloadURL,
-        fileName: file.name,
-        fileType: file.type,
-      });
-
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      toast({
-        variant: "destructive",
-        title: "Upload failed",
-        description: "There was a problem uploading your file. Please try again.",
-      });
-    } finally {
-      setIsUploading(false);
-    }
+  const sendFile = (file: File) => {
+    toast({
+      variant: "destructive",
+      title: "File uploads disabled",
+      description: "File sharing is not available without a cloud backend.",
+    });
   };
 
   const deleteMessage = (id: string) => {
-    if (!firestore) return;
-    const messageDoc = doc(firestore, 'chat_messages', id);
-    deleteDocumentNonBlocking(messageDoc);
+    setMessages(prevMessages => prevMessages.filter(msg => msg.id !== id));
   }
 
   return (
@@ -102,12 +53,12 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
       <ChatHeader />
       <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
       <ChatMessages
-        messages={messagesWithStudentData}
+        messages={messages}
         currentUser={currentUser}
         onDeleteMessage={deleteMessage}
-        isLoading={messagesLoading}
+        isLoading={false}
       />
-      <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} isUploading={isUploading} />
+      <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} isUploading={false} />
     </Card>
   );
 }

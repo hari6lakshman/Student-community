@@ -1,14 +1,27 @@
 'use client';
 
-import { redirect } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChatLayout } from '@/components/chat/chat-layout';
-import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
+import type { User } from '@/lib/types';
 
 export default function ChatPage() {
-  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (isUserLoading) {
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('studygram-user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      router.push('/');
+    }
+    setLoading(false);
+  }, [router]);
+
+  if (loading) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -18,12 +31,13 @@ export default function ChatPage() {
   }
 
   if (!user) {
-    redirect('/');
+    // This will be caught by the useEffect, but as a fallback
+    return null;
   }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 lg:p-8">
-      <ChatLayout currentUser={{ id: user.uid, name: user.displayName || 'Anonymous', email: user.email || '' }} />
+      <ChatLayout currentUser={user} />
     </main>
   );
 }
