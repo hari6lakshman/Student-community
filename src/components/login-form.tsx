@@ -9,6 +9,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LoginSchema, type State } from '@/lib/actions';
 import type { Message, User } from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';
 
 export function LoginForm() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Clear any previous user session when the login page loads
     sessionStorage.removeItem('studygram-user');
   }, []);
 
@@ -41,28 +43,30 @@ export function LoginForm() {
 
     const { email, name } = validatedFields.data;
 
-    // Use email as the unique ID
+    // Use email as the unique ID for the user
     const user: User = {
         id: email,
         email,
         name
     };
 
-    // Update name in existing messages
+    // Update name in existing messages if user logs in with same email but different name
     try {
         const savedMessages = localStorage.getItem('studygram-messages');
         if (savedMessages) {
             let messages: Message[] = JSON.parse(savedMessages);
-            let updated = false;
+            let messagesUpdated = false;
             messages.forEach(msg => {
+                // Check if the message belongs to the current user and if the name needs updating
                 if (msg.studentId === email && msg.student?.studentName !== name) {
                     if (msg.student) {
                       msg.student.studentName = name;
                     }
-                    updated = true;
+                    messagesUpdated = true;
                 }
             });
-            if (updated) {
+
+            if (messagesUpdated) {
                 localStorage.setItem('studygram-messages', JSON.stringify(messages));
             }
         }
@@ -70,8 +74,8 @@ export function LoginForm() {
         console.error("Failed to update messages in localStorage", error);
     }
 
+    // Store user info in session and navigate to chat
     sessionStorage.setItem('studygram-user', JSON.stringify(user));
-
     router.push('/chat');
   };
 
