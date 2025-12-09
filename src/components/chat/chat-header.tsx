@@ -2,16 +2,9 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 export function ChatHeader() {
-  const router = useRouter();
-
-  const handleSignOut = () => {
-    sessionStorage.removeItem('studygram-user');
-    router.push('/');
-  };
 
   return (
     <div className="p-4 flex-shrink-0 flex items-center justify-between">
@@ -20,12 +13,10 @@ export function ChatHeader() {
           <ArrowLeft />
         </Button>
       </Link>
-      <h1 className="text-2xl font-headline text-center font-bold text-primary relative right-[10px]">
+      <h1 className="text-2xl font-headline text-center font-bold text-primary grow">
         Studygram Students Community
       </h1>
-      <Button variant="ghost" size="icon" onClick={handleSignOut}>
-        <LogOut className="text-destructive" />
-      </Button>
+      <div className="w-10"></div> {/* This is a spacer to keep the title centered */}
     </div>
   );
 }
