@@ -52,14 +52,9 @@ export function ChatLayout({ currentUser }: ChatLayoutProps) {
     setMessages(prevMessages => prevMessages.filter(msg => msg.id !== id));
   }
 
-  const clearChat = () => {
-    localStorage.removeItem('studygram-messages');
-    setMessages([]);
-  };
-
   return (
     <Card className="w-full max-w-4xl h-[85vh] flex flex-col border-2 border-primary shadow-2xl shadow-primary/20 rounded-2xl">
-      <ChatHeader onClearChat={clearChat} />
+      <ChatHeader />
       <div className="h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
       <ChatMessages
         messages={messages}
